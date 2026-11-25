@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateStudentInput } from './dto/create-student.input';
 import { UpdateStudentInput } from './dto/update-student.input';
 import { PaginationInput } from './dto/pagination.input';
@@ -175,11 +175,13 @@ export class StudentsService {
     }
   }
 
-    private handleException(error:any){
+    private handleException(error:any): never{
         this.logger.error(error);
+        if(error instanceof HttpException) throw error;
         if(error.code === '23505'){
             throw new InternalServerErrorException(error.detail);
         }
+        throw new InternalServerErrorException('Unexpected error, check server logs');
     }
 }
 

@@ -1,0 +1,62 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Grades {
+  id: ID
+  subject: String!
+  grade: Int!
+}
+
+type StudentResponse {
+  id: ID!
+  name: String!
+  age: Int
+  email: String!
+  isActive: Boolean!
+  gender: String!
+  favoriteSubjects: [String!]!
+  nickname: String!
+  grades: [Grades!]
+}
+
+type Query {
+  students(paginationInput: PaginationInput!): [StudentResponse!]!
+  student(term: String!): StudentResponse!
+}
+
+input PaginationInput {
+  limit: Int
+  skip: Int
+}
+
+type Mutation {
+  createStudent(createStudentInput: CreateStudentInput!): StudentResponse!
+  updateStudent(id: ID!, updateStudentInput: UpdateStudentInput!): StudentResponse!
+  removeStudent(id: ID!): Boolean
+}
+
+input CreateStudentInput {
+  name: String!
+  age: Int!
+  email: String!
+  isActive: Boolean!
+  gender: String!
+  favoriteSubjects: [String!]!
+  grades: [GradeInput!]
+}
+
+input GradeInput {
+  subject: String!
+  grade: Int!
+}
+
+input UpdateStudentInput {
+  name: String
+  age: Int
+  email: String
+  isActive: Boolean
+  gender: String
+  favoriteSubjects: [String!]
+  grades: [GradeInput!]
+}

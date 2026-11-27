@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "GraphQL Basics",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9000/graphql"
+    },
+    {
+      "key": "email",
+      "value": "ana@test.com"
+    },
+    {
+      "key": "password",
+      "value": "Password123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "studentId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data;",
+                  "if (data && data.signup) pm.collectionVariables.set('token', data.signup.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Signup($signupInput: Register!) {\n  signup(signupInput: $signupInput) { id email token }\n}",
+                "variables": "{\n  \"signupInput\": {\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"fullName\": \"Ana Perez\"\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data;",
+                  "if (data && data.login) pm.collectionVariables.set('token', data.login.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation Login($loginInput: Login!) {\n  login(loginInput: $loginInput) { id email token }\n}",
+                "variables": "{\n  \"loginInput\": {\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Create student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json().data;",
+                  "if (data && data.createStudent) pm.collectionVariables.set('studentId', data.createStudent.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Requires role: admin or teacher.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateStudent($createStudentInput: CreateStudentInput!) {\n  createStudent(createStudentInput: $createStudentInput) { id name email age grades { subject grade } }\n}",
+                "variables": "{\n  \"createStudentInput\": {\n    \"name\": \"Juan {{$timestamp}}\",\n    \"age\": 20,\n    \"email\": \"juan{{$timestamp}}@test.com\",\n    \"isActive\": true,\n    \"gender\": \"Male\",\n    \"favoriteSubjects\": [\n      \"math\"\n    ],\n    \"grades\": [\n      {\n        \"subject\": \"math\",\n        \"grade\": 5\n      }\n    ]\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        },
+        {
+          "name": "List students",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Students($paginationInput: PaginationInput!) {\n  students(paginationInput: $paginationInput) { id name email age grades { subject grade } }\n}",
+                "variables": "{\n  \"paginationInput\": {\n    \"limit\": 10\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        },
+        {
+          "name": "Get student",
+          "request": {
+            "method": "POST",
+            "description": "term accepts an id, a name or a nickname.",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Student($term: String!) {\n  student(term: $term) { id name email age grades { subject grade } }\n}",
+                "variables": "{\n  \"term\": \"{{studentId}}\"\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        },
+        {
+          "name": "Update student",
+          "request": {
+            "method": "POST",
+            "description": "Requires role: teacher.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateStudent($id: ID!, $updateStudentInput: UpdateStudentInput!) {\n  updateStudent(id: $id, updateStudentInput: $updateStudentInput) { id name email age grades { subject grade } }\n}",
+                "variables": "{\n  \"id\": \"{{studentId}}\",\n  \"updateStudentInput\": {\n    \"age\": 21\n  }\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        },
+        {
+          "name": "Remove student",
+          "request": {
+            "method": "POST",
+            "description": "Requires role: super-user. Returns null.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "header": [],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation RemoveStudent($id: ID!) {\n  removeStudent(id: $id)\n}",
+                "variables": "{\n  \"id\": \"{{studentId}}\"\n}"
+              }
+            },
+            "url": "{{baseUrl}}"
+          }
+        }
+      ]
+    }
+  ]
+}

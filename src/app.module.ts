@@ -5,6 +5,7 @@ import { ApolloDriverConfig, ApolloDriver} from "@nestjs/apollo"
 import { join } from 'path';
 import { GraphQLModule } from '@nestjs/graphql';
 import { StudentsModule } from './students/students.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { StudentsModule } from './students/students.module';
       synchronize: true //Solo usarla en ambientes bajos, no usar en prod
     }),
     StudentsModule,
+    UserModule,
   ],
   controllers: [],
   providers: [],

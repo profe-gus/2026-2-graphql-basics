@@ -1,98 +1,123 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# GraphQL Basics
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A GraphQL API built with NestJS, Apollo, TypeORM and PostgreSQL. It manages students and their grades, with JWT authentication and role-based access.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Quick start
 
-## Description
+Requirements: Node.js 24, pnpm, and a running PostgreSQL server with an empty database.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+1. Install the dependencies:
 
-## Project setup
+   ```bash
+   pnpm install
+   ```
 
-```bash
-$ pnpm install
+2. Create a `.env` file in the project root:
+
+   ```dotenv
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=<database>
+   DB_USERNAME=<user>
+   DB_PASSWORD=<password>
+   JWT_SECRET=<long-random-string>
+   ```
+
+3. Start the server:
+
+   ```bash
+   pnpm run start:dev
+   ```
+
+4. Open <http://localhost:9000/graphql>.
+
+The tables are created automatically because TypeORM runs with `synchronize: true`. Do not use that setting in production.
+
+## Authentication
+
+1. Run `signup` or `login` and copy the returned `token`. It expires after 1 hour.
+2. Send it with every protected operation:
+
+   ```
+   Authorization: Bearer <token>
+   ```
+
+New users get the `teacher` role. Other roles (`admin`, `super-user`) must be assigned directly in the database.
+
+## Operations
+
+| Operation | Type | Allowed roles |
+|-----------|------|---------------|
+| `signup` | Mutation | Public |
+| `login` | Mutation | Public |
+| `students` | Query | Public |
+| `student` | Query | Public |
+| `createStudent` | Mutation | `admin`, `teacher` |
+| `updateStudent` | Mutation | `teacher` |
+| `removeStudent` | Mutation | `super-user` |
+
+The full schema is generated into [`src/schema.gql`](src/schema.gql).
+
+### Input rules
+
+| Field | Rule |
+|-------|------|
+| `password` | 8 to 16 characters |
+| `gender` | `Male`, `Female` or `Other` |
+| `age` | Positive integer |
+| `limit`, `skip` | Positive integers. Omit `skip` to start from the first record. |
+| `student(term:)` | An id, a name or a nickname |
+
+### Example
+
+```graphql
+mutation CreateStudent($createStudentInput: CreateStudentInput!) {
+  createStudent(createStudentInput: $createStudentInput) {
+    id
+    name
+    grades { subject grade }
+  }
+}
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+```json
+{
+  "createStudentInput": {
+    "name": "Juan",
+    "age": 20,
+    "email": "juan@test.com",
+    "isActive": true,
+    "gender": "Male",
+    "favoriteSubjects": ["math"],
+    "grades": [{ "subject": "math", "grade": 5 }]
+  }
+}
 ```
 
-## Run tests
+`removeStudent` returns `null` on success.
 
-```bash
-# unit tests
-$ pnpm run test
+## Postman collection
 
-# e2e tests
-$ pnpm run test:e2e
+Import [`postman/graphql-basics.postman_collection.json`](postman/graphql-basics.postman_collection.json), then:
 
-# test coverage
-$ pnpm run test:cov
-```
+1. Run **Signup** once, then **Login**. The token is stored automatically.
+2. Run **Create student**. Its id is stored automatically.
+3. Run any other request.
 
-## Deployment
+The collection variables `baseUrl`, `email` and `password` can be changed to match your setup.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Scripts
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Command | Purpose |
+|---------|---------|
+| `pnpm run start:dev` | Run in watch mode |
+| `pnpm run build` | Compile to `dist/` |
+| `pnpm run start:prod` | Run the compiled build |
+| `pnpm run lint` | Lint and fix |
+| `pnpm run format` | Format with Prettier |
+| `pnpm run test` | Run unit tests |
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+## Known limitations
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `skip: 0` is rejected by validation.
+- There are no unit tests yet. Jest also cannot currently load `@nestjs/graphql` (ES module cycle).

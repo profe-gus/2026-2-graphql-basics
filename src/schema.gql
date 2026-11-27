@@ -20,6 +20,12 @@ type StudentResponse {
   grades: [Grades!]
 }
 
+type AuthResponse {
+  id: String!
+  email: String!
+  token: String!
+}
+
 type Query {
   students(paginationInput: PaginationInput!): [StudentResponse!]!
   student(term: String!): StudentResponse!
@@ -34,6 +40,8 @@ type Mutation {
   createStudent(createStudentInput: CreateStudentInput!): StudentResponse!
   updateStudent(id: ID!, updateStudentInput: UpdateStudentInput!): StudentResponse!
   removeStudent(id: ID!): Boolean
+  signup(signupInput: Register!): AuthResponse!
+  login(loginInput: Login!): AuthResponse!
 }
 
 input CreateStudentInput {
@@ -59,4 +67,15 @@ input UpdateStudentInput {
   gender: String
   favoriteSubjects: [String!]
   grades: [GradeInput!]
+}
+
+input Register {
+  email: String!
+  password: String!
+  fullName: String!
+}
+
+input Login {
+  email: String!
+  password: String!
 }
